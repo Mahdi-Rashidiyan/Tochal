@@ -1,4 +1,4 @@
-# ML Agent Compiler
+# Tochal(ML agent compiler)
 
 A compiler for agentic AI workloads that transforms sequential agent execution graphs into optimised parallel schedules — the way LLVM optimises programs, but for LLM agent pipelines.
 
