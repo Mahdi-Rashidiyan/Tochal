@@ -11,17 +11,39 @@ Install:
     pip install groq
 
 Usage:
+    # macOS / Linux
     export GROQ_API_KEY="your_key_here"
+
+    # Windows PowerShell (current session)
+    $env:GROQ_API_KEY="your_key_here"
+
+    # Windows cmd.exe (permanent)
+    setx GROQ_API_KEY "your_key_here"
 """
 
 from __future__ import annotations
 
 import os
 import asyncio
+import httpx
 from groq import AsyncGroq
 
 # ── Singleton client (one per process) ───────────────────────────────────────
 _client: AsyncGroq | None = None
+
+def _create_http_client() -> httpx.AsyncClient:
+    for kwargs in (
+        {"trust_env": False},
+        {"allow_env_proxies": False},
+        {"env_proxies": False},
+        {},
+    ):
+        try:
+            return httpx.AsyncClient(**kwargs)
+        except TypeError:
+            continue
+    raise RuntimeError("Unable to create httpx.AsyncClient without env proxy handling")
+
 
 def get_client() -> AsyncGroq:
     global _client
@@ -32,7 +54,8 @@ def get_client() -> AsyncGroq:
                 "GROQ_API_KEY environment variable not set.\n"
                 "Run: export GROQ_API_KEY='your_key_here'"
             )
-        _client = AsyncGroq(api_key=api_key)
+        http_client = _create_http_client()
+        _client = AsyncGroq(api_key=api_key, http_client=http_client)
     return _client
 
 

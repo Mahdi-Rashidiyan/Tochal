@@ -61,6 +61,29 @@ With Pass 3:       [classify ∥ draft_positive] = max(0.5, 1.2) = 1.2s → comp
                    (mis-speculation rate: 20%)
 ```
 
+## Real Groq API Benchmark Results
+
+The following numbers were measured using `python -m benchmarks.benchmark_real` with the Groq `llama-3.3-70b-versatile` model via `api.groq.com`.
+
+```
+Agent 1 — Research   (3 independent queries + synthesis)   Pass 1 · Parallelism
+   Unoptimised : 3.64s
+   Optimised   : 2.14s
+   Speedup     : 1.70×
+
+Agent 2 — QA Pipeline (3 sequential calls, chain merge) Pass 2 · LLM Merging
+   Unoptimised : 1.87s
+   Optimised   : 5.41s
+   Speedup     : 0.35×
+
+Agent 3 — Branch      (speculative execution, P=0.80) Pass 3 · Speculative
+   Unoptimised : 1.37s
+   Optimised   : 1.31s
+   Speedup     : 1.04×
+
+Average speedup (real Groq API): 1.03×
+```
+
 ## Architecture
 
 ```

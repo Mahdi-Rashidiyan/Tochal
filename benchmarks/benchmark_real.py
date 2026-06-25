@@ -7,7 +7,15 @@ This is the number you show to VCs and put in the README.
 
 Setup:
     pip install groq
+
+    # macOS / Linux
     export GROQ_API_KEY="your_key_here"
+
+    # Windows PowerShell (current session)
+    $env:GROQ_API_KEY="your_key_here"
+
+    # Windows cmd.exe (permanent)
+    setx GROQ_API_KEY "your_key_here"
 
 Run:
     cd agentcompiler
