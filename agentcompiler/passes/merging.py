@@ -11,8 +11,10 @@ already better than merging for same-level nodes).
 
 from __future__ import annotations
 import asyncio
+import json
 from typing import Dict, List, Tuple
 
+from agentcompiler.backends.groq_backend import groq_call
 from agentcompiler.graph import ExecutionGraph, LLMConfig, Node, NodeType
 from agentcompiler.passes.base import CompilerPass
 
@@ -116,11 +118,52 @@ class LLMCallMergingPass(CompilerPass):
 
         merged_id = "merged_chain_" + "_".join(nids)
 
+        def _build_merge_prompt() -> str:
+            parts = []
+            for idx, nid in enumerate(nids, 1):
+                node = graph.nodes[nid]
+                prompt = node.metadata.get("merge_prompt")
+                if prompt:
+                    parts.append(f"Step {idx}: {prompt}")
+                else:
+                    parts.append(f"Step {idx}: complete the next stage for node '{nid}'.")
+            return (
+                "You are executing a chained LLM pipeline in a single request. "
+                "Perform each step in order and return a JSON object with one field per step.\n\n"
+                + "\n\n".join(parts)
+                + "\n\nReturn JSON only with the keys: "
+                + ", ".join(node.metadata.get("merge_output_key", nid) for nid in nids)
+            )
+
         async def merged_chain_fn(ctx: dict) -> dict:
-            await asyncio.sleep(merged_cfg.sim_latency_s)
-            results = {}
-            for nid in nids:
-                results[nid] = f"[chain-merged:{nid}]"
+            prompt = _build_merge_prompt()
+            response = await groq_call(
+                prompt,
+                model=cfg.model,
+                temperature=cfg.temperature,
+                max_tokens=max(180, 80 * len(nids)),
+            )
+
+            results: Dict[str, str] = {}
+            try:
+                payload = json.loads(response)
+                if isinstance(payload, dict):
+                    for nid in nids:
+                        key = graph.nodes[nid].metadata.get("merge_output_key", nid)
+                        results[nid] = str(payload.get(key, response))
+                    return results
+            except Exception:
+                pass
+
+            if len(nids) == 1:
+                return {nids[0]: response}
+
+            chunk = response.strip()
+            for idx, nid in enumerate(nids):
+                if idx == len(nids) - 1:
+                    results[nid] = chunk
+                else:
+                    results[nid] = chunk[:180]
             return results
 
         merged_node = Node(

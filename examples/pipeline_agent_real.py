@@ -53,9 +53,27 @@ def build() -> ExecutionGraph:
     cfg = LLMConfig(model=MODEL, temperature=0.0, sim_latency_s=2.0)
 
     g = ExecutionGraph()
-    g.add_node(Node("draft_answer",  NodeType.LLM_CALL, draft_answer,  llm_config=cfg))
-    g.add_node(Node("refine_answer", NodeType.LLM_CALL, refine_answer,
-                    dependencies=["draft_answer"], llm_config=cfg))
-    g.add_node(Node("format_answer", NodeType.LLM_CALL, format_answer,
-                    dependencies=["refine_answer"], llm_config=cfg))
+    g.add_node(Node(
+        "draft_answer", NodeType.LLM_CALL, draft_answer, llm_config=cfg,
+        metadata={
+            "merge_prompt": f"Draft a concise technical answer to this question: '{QUESTION}'. Keep it to 2-3 sentences.",
+            "merge_output_key": "draft_answer",
+        },
+    ))
+    g.add_node(Node(
+        "refine_answer", NodeType.LLM_CALL, refine_answer,
+        dependencies=["draft_answer"], llm_config=cfg,
+        metadata={
+            "merge_prompt": "Refine the draft for clarity and precision. Keep the explanation accurate and concise.",
+            "merge_output_key": "refine_answer",
+        },
+    ))
+    g.add_node(Node(
+        "format_answer", NodeType.LLM_CALL, format_answer,
+        dependencies=["refine_answer"], llm_config=cfg,
+        metadata={
+            "merge_prompt": "Format the refined explanation into a polished final answer with a one-line summary at the top.",
+            "merge_output_key": "format_answer",
+        },
+    ))
     return g
