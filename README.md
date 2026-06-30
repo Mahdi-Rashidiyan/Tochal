@@ -67,21 +67,21 @@ The following numbers were measured using `python -m benchmarks.benchmark_real` 
 
 ```
 Agent 1 — Research   (3 independent queries + synthesis)   Pass 1 · Parallelism
-   Unoptimised : 3.64s
-   Optimised   : 2.14s
-   Speedup     : 1.70×
+   Unoptimised : 2.68s
+   Optimised   : 2.44s
+   Speedup     : 1.10×
 
 Agent 2 — QA Pipeline (3 sequential calls, chain merge) Pass 2 · LLM Merging
-   Unoptimised : 1.87s
-   Optimised   : 5.41s
-   Speedup     : 0.35×
+   Unoptimised : 2.30s
+   Optimised   : 1.22s
+   Speedup     : 1.89×
 
 Agent 3 — Branch      (speculative execution, P=0.80) Pass 3 · Speculative
-   Unoptimised : 1.37s
-   Optimised   : 1.31s
-   Speedup     : 1.04×
+   Unoptimised : 1.48s
+   Optimised   : 1.20s
+   Speedup     : 1.23×
 
-Average speedup (real Groq API): 1.03×
+Average speedup (real Groq API): 1.41×
 ```
 
 ## Architecture
@@ -153,17 +153,11 @@ agentcompiler/
 
 ## Roadmap
 
-- [ ] Pass 3 mis-speculation cost model (adaptive threshold)
-- [ ] Real LLM backend integration (Anthropic, OpenAI)
 - [ ] LangGraph graph import adapter
 - [ ] Distributed execution backend (multi-process, multi-machine)
 - [ ] Dynamic graph recompilation based on runtime telemetry
 - [ ] CUDA-style persistent kernel for agent hot paths
 
-## Connection to Research
-
-This project operationalises insights from compiler theory applied to agentic AI workloads:
-gradient norm imbalance in LLM training creates uneven computation graphs that benefit disproportionately from parallelism extraction at inference time. See the companion NeurIPS paper for the theoretical grounding.
 
 ## License
 
